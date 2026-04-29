@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>華航幸運抽獎</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Microsoft JhengHei','Noto Sans TC',sans-serif;background:#0d2147;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+#app{width:480px;min-height:640px;position:relative;}
+.page{display:none;flex-direction:column;align-items:center;}
+.page.active{display:flex;}
+
+/* ── COVER ── */
+#cover{background:#1a3a6b;min-height:640px;width:100%;justify-content:center;padding:3rem 2rem;border-radius:16px;}
+.ci-logo{width:88px;height:88px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;margin-bottom:1.5rem;}
+.cover-title{color:#fff;font-size:28px;font-weight:700;text-align:center;letter-spacing:3px;}
+.cover-sub{color:#a8c4e8;font-size:13px;text-align:center;margin:.5rem 0 1rem;}
+.cover-days{display:flex;gap:8px;margin:.8rem 0;}
+.day-badge{background:rgba(255,255,255,0.15);color:#fff;font-size:12px;padding:5px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.3);}
+.day-badge.active-day{background:#fff;color:#1a3a6b;font-weight:700;}
+.everyone-badge{background:rgba(255,255,255,0.2);color:#fff;font-size:13px;padding:6px 20px;border-radius:999px;margin:.5rem 0;border:1px solid rgba(255,255,255,0.4);}
+.prizes-preview{width:100%;max-width:380px;margin:1rem 0;display:flex;flex-direction:column;gap:8px;}
+.prize-row{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px;}
+.prize-icon-wrap{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.prize-name{color:#fff;font-size:13px;font-weight:600;}
+.prize-remain{color:#a8c4e8;font-size:11px;margin-top:2px;}
+.start-btn{margin-top:1.2rem;padding:16px 64px;background:#fff;color:#1a3a6b;border:none;border-radius:999px;font-size:18px;font-weight:700;cursor:pointer;letter-spacing:2px;}
+.start-btn:hover{background:#dce8f7;}
+.admin-toggle{position:absolute;top:14px;right:18px;font-size:11px;color:rgba(168,196,232,0.7);cursor:pointer;background:none;border:none;text-decoration:underline;}
+
+/* ── WHEEL ── */
+#wheel-page{background:#eef3fb;min-height:640px;width:100%;padding:1.5rem 1rem 2rem;border-radius:16px;}
+.wheel-header{display:flex;align-items:center;gap:8px;margin-bottom:1.2rem;width:100%;}
+.back-btn{background:none;border:1px solid #1a3a6b;color:#1a3a6b;border-radius:999px;padding:5px 16px;font-size:13px;cursor:pointer;}
+.wheel-title{color:#1a3a6b;font-size:16px;font-weight:700;}
+.day-indicator{margin-left:auto;font-size:12px;background:#dce8f7;padding:4px 14px;border-radius:999px;color:#185FA5;font-weight:600;}
+.wheel-wrap{position:relative;width:320px;height:320px;margin:0 auto;}
+#wpointer{position:absolute;top:-16px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:26px solid #1a3a6b;}
+.spin-center-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:62px;height:62px;border-radius:50%;background:#1a3a6b;color:#fff;border:3px solid #fff;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:1px;box-shadow:0 2px 12px rgba(26,58,107,0.3);}
+.spin-center-btn:hover{background:#185FA5;}
+.spin-center-btn:disabled{background:#aaa;cursor:not-allowed;}
+.wheel-prizes{width:100%;max-width:360px;margin:1.2rem auto 0;display:flex;flex-direction:column;gap:6px;}
+.wp-row{display:flex;align-items:center;gap:10px;background:#fff;border-radius:10px;padding:8px 14px;border:1px solid #e0e6f0;}
+.wp-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.wp-label{font-size:13px;color:#333;flex:1;}
+.wp-count{font-size:13px;color:#185FA5;font-weight:700;}
+
+/* ── RESULT ── */
+#result-overlay{display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(10,28,70,0.94);border-radius:16px;align-items:center;justify-content:center;flex-direction:column;gap:1.2rem;z-index:10;padding:2rem;}
+#result-overlay.show{display:flex;}
+.result-icon{font-size:64px;}
+.result-prize{color:#fff;font-size:22px;font-weight:700;text-align:center;line-height:1.4;}
+.result-sub{color:#a8c4e8;font-size:14px;text-align:center;}
+.result-close{margin-top:.5rem;padding:12px 40px;background:#fff;color:#1a3a6b;border:none;border-radius:999px;font-size:16px;font-weight:700;cursor:pointer;}
+.result-close:hover{background:#dce8f7;}
+
+/* ── ADMIN ── */
+#admin-page{width:100%;padding:1.5rem;min-height:640px;background:#f5f7fa;border-radius:16px;}
+.admin-header{display:flex;align-items:center;gap:8px;margin-bottom:1.2rem;}
+.admin-title{font-size:20px;font-weight:700;color:#1a3a6b;}
+.sync-badge{margin-left:auto;font-size:11px;padding:4px 12px;border-radius:999px;background:#e0e0e0;color:#555;}
+.sync-badge.ok{background:#d4edda;color:#155724;}
+.sync-badge.err{background:#f8d7da;color:#721c24;}
+.sync-badge.loading{background:#fff3cd;color:#856404;}
+.section{background:#fff;border:1px solid #dde3ee;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem;}
+.section h3{font-size:13px;font-weight:600;color:#555;margin-bottom:.8rem;}
+.row3{display:grid;grid-template-columns:1fr 80px 90px;gap:8px;align-items:center;margin-bottom:8px;font-size:13px;}
+.row3.hdr{color:#888;font-size:11px;padding-bottom:4px;border-bottom:1px solid #eee;}
+.row3 input{font-size:13px;padding:5px 8px;height:34px;text-align:center;border:1px solid #ccc;border-radius:6px;width:100%;}
+.dtabs{display:flex;gap:6px;margin-bottom:.8rem;flex-wrap:wrap;}
+.dtab{padding:5px 16px;border-radius:999px;border:1px solid #bbb;background:none;color:#555;font-size:13px;cursor:pointer;}
+.dtab.active{background:#1a3a6b;color:#fff;border-color:#1a3a6b;}
+.save-btn{padding:10px 28px;background:#1a3a6b;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:.6rem;}
+.save-btn:hover{background:#185FA5;}
+.save-btn:disabled{background:#aaa;cursor:not-allowed;}
+.hint{font-size:11px;color:#888;margin-top:6px;}
+.hint.warn{color:#b45309;}
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.scard{background:#f0f4fa;border-radius:8px;padding:.75rem;text-align:center;}
+.sval{font-size:22px;font-weight:700;color:#1a3a6b;}
+.slbl{font-size:11px;color:#888;margin-top:2px;}
+.ok-box{background:#d4edda;border:1px solid #a8d5b5;border-radius:10px;padding:.75rem 1rem;font-size:12px;color:#155724;line-height:1.7;}
+</style>
+</head>
+<body>
+<div id="app" style="position:relative;">
+
+  <!-- COVER -->
+  <div id="cover" class="page active">
+    <button class="admin-toggle" onclick="showAdmin()">後台管理</button>
+    <div class="ci-logo">
+      <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+        <circle cx="28" cy="28" r="26" fill="#1a3a6b"/>
+        <path d="M9 28 Q15 17 28 15 Q41 13 47 24" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M11 32 Q22 41 35 39 Q45 37 47 28" stroke="#c8a84b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <circle cx="28" cy="28" r="6" fill="#fff"/>
+        <circle cx="28" cy="28" r="3" fill="#1a3a6b"/>
+      </svg>
+    </div>
+    <div class="cover-title">CHINA AIRLINES</div>
+    <div class="cover-title" style="font-size:20px;letter-spacing:5px;margin-top:-4px;">幸運抽獎</div>
+    <div class="cover-sub">Lucky Draw · 活動共四天</div>
+    <div class="cover-days" id="cover-days"></div>
+    <div class="everyone-badge">&#127881; 人人有獎 · Every spin wins!</div>
+    <div class="prizes-preview" id="cover-prizes"></div>
+    <button class="start-btn" onclick="gotoWheel()">開始抽獎</button>
+  </div>
+
+  <!-- WHEEL -->
+  <div id="wheel-page" class="page" style="position:relative;">
+    <div class="wheel-header" style="width:100%;">
+      <button class="back-btn" onclick="gotoCover()">&#8592; 返回</button>
+      <div class="wheel-title">幸運轉盤</div>
+      <div class="day-indicator" id="day-indicator">第 1 天</div>
+    </div>
+    <div class="wheel-wrap">
+      <div id="wpointer"></div>
+      <canvas id="wcanvas" width="320" height="320"></canvas>
+      <button class="spin-center-btn" id="spin-btn" onclick="doSpin()">抽</button>
+    </div>
+    <div class="wheel-prizes" id="wheel-prizes"></div>
+    <div id="result-overlay">
+      <div class="result-icon" id="res-icon">&#127881;</div>
+      <div class="result-prize" id="res-prize"></div>
+      <div class="result-sub" id="res-sub"></div>
+      <button class="result-close" onclick="closeResult()">繼續</button>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="admin-page" class="page">
+    <div class="admin-header">
+      <button class="back-btn" onclick="gotoCover()">&#8592; 返回</button>
+      <div class="admin-title">後台管理</div>
+      <div class="sync-badge" id="sync-badge">連線中...</div>
+    </div>
+    <div class="section">
+      <h3>活動統計</h3>
+      <div class="sgrid" id="stats-grid"></div>
+    </div>
+    <div class="section">
+      <h3>每日獎項機率設定</h3>
+      <div class="dtabs" id="day-tabs"></div>
+      <div class="row3 hdr"><span>獎項</span><span style="text-align:center;">剩餘</span><span style="text-align:center;">機率 %</span></div>
+      <div id="prize-rows"></div>
+      <div class="hint" id="prob-hint"></div>
+      <div class="hint" style="margin-top:4px;">寶可夢禮物為兜底獎，機率自動補足至 100%</div>
+      <button class="save-btn" id="save-btn" onclick="saveToFirebase()">儲存並同步至雲端</button>
+    </div>
+    <div class="section">
+      <h3>切換活動日（前台顯示）</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="sim-days"></div>
+    </div>
+    <div class="section ok-box">
+      &#9989; Firebase 已連線（新加坡）<br>
+      在任何裝置開啟後台 &#8594; 儲存 &#8594; 觸控電視即時生效。<br>
+      觸控電視不需要登入任何帳號。
+    </div>
+  </div>
+</div>
+
+<script>
+const FB_URL='https://china-airlines-lucky-default-rtdb.asia-southeast1.firebasedatabase.app';
+
+const PRIZES=[
+  {id:'p1',name:'華航國際航點來回機票',short:'最大獎',icon:'✈',color:'#1a3a6b'},
+  {id:'p2',name:'華信航空國內來回機票',short:'二獎',  icon:'🛩',color:'#854F0B'},
+  {id:'p3',name:'寶可夢精美小禮物',    short:'禮物',  icon:'🎁',color:'#3B6D11'},
+];
+const C1=['#1a3a6b','#2260a8','#3B6D11','#854F0B','#185FA5','#4a8a2a'];
+const C2=['#2a5a9b','#3375c0','#639922','#BA7517','#378ADD','#97C459'];
+
+let currentDay=1,adminDay=1,spinning=false,wheelAngle=0;
+
+let state={
+  dayRemain:{1:{p1:1,p2:2,p3:100},2:{p1:1,p2:2,p3:100},3:{p1:1,p2:2,p3:100},4:{p1:1,p2:2,p3:100}},
+  totalRemain:{p1:4,p2:8,p3:400},
+  probs:{1:{p1:2,p2:5},2:{p1:2,p2:5},3:{p1:2,p2:5},4:{p1:2,p2:5}},
+  results:[],
+};
+
+function setSyncBadge(s,t){const el=document.getElementById('sync-badge');if(!el)return;el.className='sync-badge '+s;el.textContent=t;}
+
+async function loadFromFirebase(){
+  setSyncBadge('loading','同步中...');
+  try{
+    const r=await fetch(`${FB_URL}/spinState.json`);
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    if(d)Object.assign(state,d);
+    setSyncBadge('ok','已同步 ✓');
+  }catch(e){setSyncBadge('err','連線失敗，使用本機設定');}
+}
+
+async function saveToFirebase(){
+  const btn=document.getElementById('save-btn');
+  btn.disabled=true;btn.textContent='儲存中...';
+  setSyncBadge('loading','同步中...');
+  try{
+    const r=await fetch(`${FB_URL}/spinState.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(state)});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    setSyncBadge('ok','已同步 ✓');
+    btn.textContent='已儲存 ✓';
+    setTimeout(()=>{btn.textContent='儲存並同步至雲端';btn.disabled=false;},2000);
+  }catch(e){
+    setSyncBadge('err','失敗：'+e.message);
+    btn.textContent='儲存並同步至雲端';btn.disabled=false;
+  }
+}
+
+function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function gotoCover(){showPage('cover');renderCover();}
+function gotoWheel(){showPage('wheel-page');renderWheel();}
+function showAdmin(){showPage('admin-page');loadFromFirebase().then(()=>renderAdmin());}
+
+function getSegs(){
+  const s=PRIZES.filter(p=>state.dayRemain[currentDay][p.id]>0).map(p=>({...p}));
+  if(!s.find(x=>x.id==='p3'))s.push({...PRIZES[2]});
+  return s;
+}
+
+function drawWheel(){
+  const cv=document.getElementById('wcanvas');if(!cv)return;
+  const ctx=cv.getContext('2d');
+  const segs=getSegs();const n=segs.length;
+  const cx=160,cy=160,r=148,sl=(Math.PI*2)/n;
+  ctx.clearRect(0,0,320,320);
+  for(let i=0;i<n;i++){
+    const a0=wheelAngle+i*sl,a1=a0+sl;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,a0,a1);ctx.closePath();
+    ctx.fillStyle=i%2===0?C1[i%C1.length]:C2[i%C2.length];ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.55)';ctx.lineWidth=2;ctx.stroke();
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(a0+sl/2);
+    ctx.textAlign='right';ctx.fillStyle='#fff';
+    ctx.font=`700 ${n>4?12:14}px 'Microsoft JhengHei',sans-serif`;
+    ctx.fillText(segs[i].short,r-12,5);ctx.restore();
+  }
+  ctx.beginPath();ctx.arc(cx,cy,28,0,Math.PI*2);
+  ctx.fillStyle='#fff';ctx.fill();
+  ctx.strokeStyle='#1a3a6b';ctx.lineWidth=3;ctx.stroke();
+}
+
+function pickPrize(){
+  const pr=state.probs[currentDay];
+  const p1=state.dayRemain[currentDay].p1>0?Number(pr.p1||0):0;
+  const p2=state.dayRemain[currentDay].p2>0?Number(pr.p2||0):0;
+  const r=Math.random()*100;
+  if(r<p1)return PRIZES[0];
+  if(r<p1+p2)return PRIZES[1];
+  return PRIZES[2];
+}
+
+function doSpin(){
+  if(spinning)return;
+  const btn=document.getElementById('spin-btn');
+  btn.disabled=true;spinning=true;
+  const prize=pickPrize();
+  const segs=getSegs();const n=segs.length;
+  const sl=(Math.PI*2)/n;
+  let idx=segs.findIndex(s=>s.id===prize.id);if(idx<0)idx=segs.length-1;
+  const targetMid=idx*sl+sl/2;
+  const pointer=-Math.PI/2;
+  let diff=(pointer-targetMid-wheelAngle)%(Math.PI*2);
+  if(diff<0)diff+=Math.PI*2;
+  const extra=Math.PI*2*(6+Math.floor(Math.random()*4))+diff;
+  const dur=4500,t0=performance.now(),a0=wheelAngle;
+  function ease(t){return 1-Math.pow(1-t,4);}
+  function frame(now){
+    const t=Math.min((now-t0)/dur,1);
+    wheelAngle=a0+extra*ease(t);drawWheel();
+    if(t<1){requestAnimationFrame(frame);}
+    else{
+      wheelAngle=wheelAngle%(Math.PI*2);spinning=false;
+      state.dayRemain[currentDay][prize.id]=Math.max(0,state.dayRemain[currentDay][prize.id]-1);
+      state.totalRemain[prize.id]=Math.max(0,state.totalRemain[prize.id]-1);
+      state.results.push({day:currentDay,prize:prize.id,ts:Date.now()});
+      showResult(prize);renderWheelPrizes();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+function showResult(p){
+  const icons={p1:'✈',p2:'🛩',p3:'🎁'};
+  const subs={p1:'請至服務台領取機票兌換憑證',p2:'請至服務台領取機票兌換憑證',p3:'請至服務台領取精美禮物'};
+  document.getElementById('res-icon').textContent=icons[p.id]||'🎉';
+  document.getElementById('res-prize').textContent='恭喜獲得：'+p.name;
+  document.getElementById('res-sub').textContent=subs[p.id]||'';
+  document.getElementById('result-overlay').classList.add('show');
+}
+function closeResult(){
+  document.getElementById('result-overlay').classList.remove('show');
+  document.getElementById('spin-btn').disabled=false;
+}
+
+function renderWheelPrizes(){
+  const cols=['#1a3a6b','#854F0B','#3B6D11'];
+  document.getElementById('wheel-prizes').innerHTML=PRIZES.map((p,i)=>`
+    <div class="wp-row">
+      <div class="wp-dot" style="background:${cols[i]}"></div>
+      <div class="wp-label">${p.short} — ${p.name}</div>
+      <div class="wp-count">剩 ${state.dayRemain[currentDay][p.id]}</div>
+    </div>`).join('');
+}
+
+function renderWheel(){
+  document.getElementById('day-indicator').textContent=`第 ${currentDay} 天`;
+  document.getElementById('result-overlay').classList.remove('show');
+  drawWheel();renderWheelPrizes();
+  document.getElementById('spin-btn').disabled=false;
+}
+
+function renderCover(){
+  document.getElementById('cover-days').innerHTML=
+    [1,2,3,4].map(d=>`<div class="day-badge${d===currentDay?' active-day':''}">Day ${d}</div>`).join('');
+  document.getElementById('cover-prizes').innerHTML=
+    PRIZES.map(p=>`
+      <div class="prize-row">
+        <div class="prize-icon-wrap">${p.icon}</div>
+        <div>
+          <div class="prize-name">${p.name}</div>
+          <div class="prize-remain">總剩 ${state.totalRemain[p.id]} 份 · 今日剩 ${state.dayRemain[currentDay][p.id]} 份</div>
+        </div>
+      </div>`).join('');
+}
+
+function updateProbHint(){
+  const p1=parseFloat(document.getElementById('prob-p1')?.value||0);
+  const p2=parseFloat(document.getElementById('prob-p2')?.value||0);
+  const p3=Math.max(0,100-p1-p2);
+  const el=document.getElementById('prob-hint');if(!el)return;
+  const over=p1+p2>100;
+  el.className='hint'+(over?' warn':'');
+  el.textContent=over?'⚠ 機率超過 100%，請調整':`寶可夢禮物自動機率：${p3.toFixed(1)}%`;
+}
+
+function renderAdmin(){
+  document.getElementById('day-tabs').innerHTML=
+    [1,2,3,4].map(d=>`<button class="dtab${d===adminDay?' active':''}" onclick="setAdminDay(${d})">第 ${d} 天</button>`).join('');
+  document.getElementById('prize-rows').innerHTML=
+    PRIZES.slice(0,2).map(p=>`
+      <div class="row3">
+        <span>${p.name}</span>
+        <input type="number" id="remain-${p.id}" value="${state.dayRemain[adminDay][p.id]}" min="0" max="999" oninput="syncRemain('${p.id}',this.value)"/>
+        <input type="number" id="prob-${p.id}" value="${state.probs[adminDay][p.id]||0}" min="0" max="100" step="0.1" oninput="updateProbHint()"/>
+      </div>`).join('')+`
+    <div class="row3" style="opacity:.55;">
+      <span>寶可夢禮物（自動兜底）</span>
+      <input type="number" id="remain-p3" value="${state.dayRemain[adminDay].p3}" min="0" max="9999" oninput="syncRemain('p3',this.value)"/>
+      <input disabled placeholder="自動" style="background:#eee;"/>
+    </div>`;
+  updateProbHint();
+  document.getElementById('stats-grid').innerHTML=`
+    <div class="scard"><div class="sval">${state.results.length}</div><div class="slbl">總抽獎次數</div></div>
+    <div class="scard"><div class="sval">${4-state.totalRemain.p1}</div><div class="slbl">頭獎已發</div></div>
+    <div class="scard"><div class="sval">${8-state.totalRemain.p2}</div><div class="slbl">二獎已發</div></div>`;
+  document.getElementById('sim-days').innerHTML=
+    [1,2,3,4].map(d=>`<button class="dtab${d===currentDay?' active':''}" onclick="simDay(${d})">切換第 ${d} 天</button>`).join('');
+}
+
+function syncRemain(id,val){
+  state.dayRemain[adminDay][id]=parseInt(val)||0;
+  state.totalRemain[id]=Object.values(state.dayRemain).reduce((a,d)=>a+(d[id]||0),0);
+}
+function setAdminDay(d){
+  const p1=parseFloat(document.getElementById('prob-p1')?.value||state.probs[adminDay].p1||0);
+  const p2=parseFloat(document.getElementById('prob-p2')?.value||state.probs[adminDay].p2||0);
+  state.probs[adminDay]={p1,p2};adminDay=d;renderAdmin();
+}
+function simDay(d){currentDay=d;renderAdmin();}
+
+loadFromFirebase().then(()=>renderCover());
+</script>
+</body>
+</html>
