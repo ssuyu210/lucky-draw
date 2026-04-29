@@ -189,9 +189,13 @@ async function loadFromFirebase(){
     const r=await fetch(`${FB_URL}/spinState.json`);
     if(!r.ok)throw new Error('HTTP '+r.status);
     const d=await r.json();
+    alert('Firebase讀取：'+(d?'p1='+d.probs[1].p1:'null'));
     if(d)Object.assign(state,d);
     setSyncBadge('ok','已同步 ✓');
-  }catch(e){setSyncBadge('err','連線失敗，使用本機設定');}
+  }catch(e){
+    alert('Firebase讀取失敗：'+e.message);
+    setSyncBadge('err','連線失敗，使用本機設定');
+  }
 }
 
 async function saveToFirebase(){
