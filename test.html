@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Firebase 測試</title>
+<style>
+body{font-family:sans-serif;padding:2rem;max-width:400px;margin:0 auto;}
+button{padding:12px 24px;font-size:16px;margin:8px 0;width:100%;border-radius:8px;border:1px solid #ccc;cursor:pointer;}
+#result{margin-top:1rem;padding:1rem;border-radius:8px;background:#f0f0f0;font-size:14px;white-space:pre-wrap;}
+</style>
+</head>
+<body>
+<h2>Firebase 連線測試</h2>
+<button onclick="testRead()">讀取 Firebase</button>
+<button onclick="testWrite()">寫入測試數字（p1=99）</button>
+<button onclick="testRead()">再次讀取確認</button>
+<div id="result">按上方按鈕測試...</div>
+<script>
+const FB='https://china-airlines-lucky-default-rtdb.asia-southeast1.firebasedatabase.app';
+
+async function testRead(){
+  document.getElementById('result').textContent='讀取中...';
+  try{
+    const r=await fetch(`${FB}/spinState/probs.json`);
+    const d=await r.json();
+    document.getElementById('result').textContent='讀取成功：\n'+JSON.stringify(d,null,2);
+  }catch(e){
+    document.getElementById('result').textContent='讀取失敗：'+e.message;
+  }
+}
+
+async function testWrite(){
+  document.getElementById('result').textContent='寫入中...';
+  try{
+    const data={1:{p1:99,p2:1},2:{p1:99,p2:1},3:{p1:99,p2:1},4:{p1:99,p2:1}};
+    const r=await fetch(`${FB}/spinState/probs.json`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(data)
+    });
+    const d=await r.json();
+    document.getElementById('result').textContent='寫入結果（HTTP '+r.status+'）：\n'+JSON.stringify(d,null,2);
+  }catch(e){
+    document.getElementById('result').textContent='寫入失敗：'+e.message;
+  }
+}
+</script>
+</body>
+</html>
